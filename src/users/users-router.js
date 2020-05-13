@@ -7,7 +7,7 @@ const UsersService = require("./users-service");
 const usersRouter = express.Router();
 const jsonBodyParser = express.json();
 
-// Only endpoint should be POST to /api/users
+// The only endpoint should be POST for /api/users
 usersRouter.post("/", jsonBodyParser, (req, res, next) => {
     const { email, password } = req.body;
 
