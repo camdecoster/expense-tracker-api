@@ -1,7 +1,8 @@
 module.exports = {
     PORT: process.env.PORT || 8000,
     NODE_ENV: process.env.NODE_ENV || "development",
-    DB_URL:
-        process.env.DB_URL || "postgresql://et_mod@localhost/expense-tracker",
+    DATABASE_URL:
+        process.env.DATABASE_URL ||
+        "postgresql://et_mod@localhost/expense-tracker",
     JWT_SECRET: process.env.JWT_SECRET || "marblerumfingertoast",
 };
