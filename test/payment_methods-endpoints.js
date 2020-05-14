@@ -5,7 +5,7 @@ const knex = require("knex");
 // Configuration
 const helpers = require("./test-helpers");
 
-describe.only("Payment Methods Endpoints", function () {
+describe("Payment Methods Endpoints", function () {
     let db;
 
     const { testUsers, testPayment_methods } = helpers.makeExpensesFixtures();
