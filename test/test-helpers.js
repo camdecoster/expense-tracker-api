@@ -13,6 +13,18 @@ function cleanTables(db) {
     );
 }
 
+function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+    const subject = user.email;
+    const payload = { user_id: user.id };
+
+    const token = jwt.sign(payload, secret, {
+        subject,
+        algorithm: "HS256",
+    });
+
+    return `Bearer ${token}`;
+}
+
 function makeCategoriesArray(users) {
     return [
         {
@@ -20,7 +32,7 @@ function makeCategoriesArray(users) {
             user_id: users[0].id,
             category_name: "Auto",
             type: "monthly",
-            amount: 50,
+            amount: "$50.00",
             description:
                 "All car related expenses: gas, service, insurance, etc.",
             date_created: "2020-05-03T00:00:00.000Z",
@@ -31,7 +43,7 @@ function makeCategoriesArray(users) {
             user_id: users[0].id,
             category_name: "Bills",
             type: "monthly",
-            amount: 300,
+            amount: "$300.00",
             description:
                 "Monthly bills including phone, internet, utilities, etc.",
             date_created: "2020-05-04T00:00:00.000Z",
@@ -42,7 +54,7 @@ function makeCategoriesArray(users) {
             user_id: users[0].id,
             category_name: "Home",
             type: "monthly",
-            amount: 1700,
+            amount: "$1,700.00",
             description: "Mortgage and purchases to improve/fix my house",
             date_created: "2020-05-06T00:00:00.000Z",
             date_modified: "2020-05-06T00:00:00.000Z",
@@ -52,7 +64,7 @@ function makeCategoriesArray(users) {
             user_id: users[0].id,
             category_name: "Shopping",
             type: "monthly",
-            amount: 200,
+            amount: "$200.00",
             description:
                 "All shopping expenses not covered by other categories.",
             date_created: "2020-05-05T00:00:00.000Z",
@@ -63,7 +75,7 @@ function makeCategoriesArray(users) {
             user_id: users[1].id,
             category_name: "Business",
             type: "monthly",
-            amount: 150,
+            amount: "$150.00",
             description: "Purchases for work related items, home office stuff.",
             date_created: "2020-05-03T00:00:00.000Z",
             date_modified: "2020-05-03T00:00:00.000Z",
@@ -73,7 +85,7 @@ function makeCategoriesArray(users) {
             user_id: users[1].id,
             category_name: "Clothing",
             type: "quarterly",
-            amount: 300,
+            amount: "$300.00",
             description:
                 "Clothing purchases for me and my family. Includes shoes.",
             date_created: "2020-05-04T00:00:00.000Z",
@@ -84,7 +96,7 @@ function makeCategoriesArray(users) {
             user_id: users[1].id,
             category_name: "Pets",
             type: "monthly",
-            amount: 100,
+            amount: "$100.00",
             description: "Pet expenses like food, litter, toys, etc.",
             date_created: "2020-05-06T00:00:00.000Z",
             date_modified: "2020-05-06T00:00:00.000Z",
@@ -94,13 +106,38 @@ function makeCategoriesArray(users) {
             user_id: users[1].id,
             category_name: "Travel",
             type: "yearly",
-            amount: 2000,
+            amount: "$2,000.00",
             description:
                 "Expenses from traveling on flying, road trips, food while traveling.",
             date_created: "2020-05-05T00:00:00.000Z",
             date_modified: "2020-05-05T00:00:00.000Z",
         },
     ];
+}
+
+function makeExpectedCategory(category) {
+    return {
+        id: category.id,
+        category_name: category.category_name,
+        type: category.type,
+        amount: category.amount,
+        description: category.description,
+        date_created: category.date_created,
+        date_modified: category.date_modified,
+    };
+}
+
+function makeExpectedPayment_method(payment_method) {
+    return {
+        id: payment_method.id,
+        payment_method_name: payment_method.payment_method_name,
+        cycle_type: payment_method.cycle_type,
+        cycle_start: payment_method.cycle_start,
+        cycle_end: payment_method.cycle_end,
+        description: payment_method.description,
+        date_created: payment_method.date_created,
+        date_modified: payment_method.date_modified,
+    };
 }
 
 function makeExpensesArray(users, categories, paymentMethods) {
@@ -215,22 +252,75 @@ function makeExpensesArray(users, categories, paymentMethods) {
 function makeExpensesFixtures() {
     const testUsers = makeUsersArray();
     const testCategories = makeCategoriesArray(testUsers);
-    const testPaymentMethods = makePaymentMethodsArray(testUsers);
+    const testPayment_methods = makePayment_methodsArray(testUsers);
     const testExpenses = makeExpensesArray(
         testUsers,
         testCategories,
-        testPaymentMethods
+        testPayment_methods
     );
-    return { testUsers, testCategories, testPaymentMethods, testExpenses };
+    return { testUsers, testCategories, testPayment_methods, testExpenses };
 }
 
-function makePaymentMethodsArray(users) {
+function makeMaliciousCategory(user) {
+    const maliciousCategory = {
+        id: 911,
+        user_id: user.id,
+        category_name: 'Malicious category_name <script>alert("xss");</script>',
+        type: 'Malicious type <script>alert("xss");</script>',
+        amount: "$254.60",
+        description:
+            'Malicious description <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">',
+        date_created: new Date().toISOString(),
+    };
+    const expectedCategory = {
+        ...maliciousCategory,
+        category_name:
+            'Malicious category_name &lt;script&gt;alert("xss");&lt;/script&gt;',
+        type: 'Malicious type &lt;script&gt;alert("xss");&lt;/script&gt;',
+        description:
+            'Malicious description <img src="https://url.to.file.which/does-not.exist">',
+    };
+    return {
+        maliciousCategory,
+        expectedCategory,
+    };
+}
+
+function makeMaliciousPayment_method(user) {
+    const maliciousPayment_method = {
+        id: 911,
+        user_id: user.id,
+        payment_method_name:
+            'Malicious payment_method_name <script>alert("xss");</script>',
+        cycle_type: 'Malicious cycle_type <script>alert("xss");</script>',
+        cycle_start: 5,
+        cycle_end: 4,
+        description:
+            'Malicious description <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">',
+        date_created: new Date().toISOString(),
+    };
+    const expectedPayment_method = {
+        ...maliciousPayment_method,
+        payment_method_name:
+            'Malicious payment_method_name &lt;script&gt;alert("xss");&lt;/script&gt;',
+        cycle_type:
+            'Malicious cycle_type &lt;script&gt;alert("xss");&lt;/script&gt;',
+        description:
+            'Malicious description <img src="https://url.to.file.which/does-not.exist">',
+    };
+    return {
+        maliciousPayment_method,
+        expectedPayment_method,
+    };
+}
+
+function makePayment_methodsArray(users) {
     return [
         {
             id: 1,
             user_id: users[0].id,
             payment_method_name: "Chase CC",
-            type: "offset",
+            cycle_type: "offset",
             cycle_start: 9,
             cycle_end: 8,
             description: "Visa card from Chase bank",
@@ -241,7 +331,7 @@ function makePaymentMethodsArray(users) {
             id: 2,
             user_id: users[0].id,
             payment_method_name: "Wells Fargo CC",
-            type: "offset",
+            cycle_type: "offset",
             cycle_start: 11,
             cycle_end: 10,
             description: "Mastercard card from Wells Fargo bank",
@@ -252,7 +342,7 @@ function makePaymentMethodsArray(users) {
             id: 3,
             user_id: users[0].id,
             payment_method_name: "Cash",
-            type: "monthly",
+            cycle_type: "monthly",
             cycle_start: 0,
             cycle_end: 0,
             description: "Payments made with cash (paper and coins)",
@@ -263,7 +353,7 @@ function makePaymentMethodsArray(users) {
             id: 4,
             user_id: users[0].id,
             payment_method_name: "Check",
-            type: "monthly",
+            cycle_type: "monthly",
             cycle_start: 0,
             cycle_end: 0,
             description: "Payments made with checks (paper only)",
@@ -274,7 +364,7 @@ function makePaymentMethodsArray(users) {
             id: 5,
             user_id: users[1].id,
             payment_method_name: "Target CC",
-            type: "offset",
+            cycle_type: "offset",
             cycle_start: 12,
             cycle_end: 11,
             description:
@@ -286,7 +376,7 @@ function makePaymentMethodsArray(users) {
             id: 6,
             user_id: users[1].id,
             payment_method_name: "Kroger CC",
-            type: "offset",
+            cycle_type: "offset",
             cycle_start: 20,
             cycle_end: 19,
             description:
@@ -298,7 +388,7 @@ function makePaymentMethodsArray(users) {
             id: 7,
             user_id: users[1].id,
             payment_method_name: "Cash",
-            type: "monthly",
+            cycle_type: "monthly",
             cycle_start: 0,
             cycle_end: 0,
             description: "Payments made with cash (paper and coins)",
@@ -309,7 +399,7 @@ function makePaymentMethodsArray(users) {
             id: 8,
             user_id: users[1].id,
             payment_method_name: "Wells Fargo Bill Pay",
-            type: "monthly",
+            cycle_type: "monthly",
             cycle_start: 0,
             cycle_end: 0,
             description: "Payments made from Bill Pay at Wells Fargo.",
@@ -324,18 +414,48 @@ function makeUsersArray() {
         {
             id: 1,
             email: "testuser_1@test.com",
-            password: "test1",
+            // bcrypt.hash('test1', 12)
+            password:
+                "$2a$12$w2aSK3YEXlnHumDCL9vcee14606sdY8O9pTFUT9QTVoRXe.ZTiCmS",
             date_created: "2019-01-03T00:00:00.000Z",
             date_modified: "2019-01-03T00:00:00.000Z",
         },
         {
             id: 2,
             email: "testuser_2@test.com",
-            password: "test2",
+            // bcrypt.hash('test2', 12)
+            password:
+                "$2a$12$ItuUP/dRZgoFnfy5J1tmnuzX9sVQ1/68RC1s3Krp5ZHOC1HkJoS7e",
             date_created: "2018-08-15T23:00:00.000Z",
             date_modified: "2018-08-15T23:00:00.000Z",
         },
     ];
+}
+
+function seedCategoriesTables(db, users, categories) {
+    // Seed users, then seed categories
+    return seedUsers(db, users).then(() =>
+        db.into("categories").insert(categories)
+    );
+}
+
+function seedPayment_methodsTables(db, users, payment_methods) {
+    // Seed users, then seed payment methods
+    return seedUsers(db, users).then(() =>
+        db.into("payment_methods").insert(payment_methods)
+    );
+}
+
+function seedMaliciousCategory(db, user, category) {
+    return seedUsers(db, [user]).then(() =>
+        db.into("categories").insert([category])
+    );
+}
+
+function seedMaliciousPayment_method(db, user, payment_method) {
+    return seedUsers(db, [user]).then(() =>
+        db.into("payment_methods").insert([payment_method])
+    );
 }
 
 function seedUsers(db, users) {
@@ -356,10 +476,19 @@ function seedUsers(db, users) {
 
 module.exports = {
     cleanTables,
+    makeAuthHeader,
     makeCategoriesArray,
+    makeExpectedCategory,
+    makeExpectedPayment_method,
     makeExpensesArray,
     makeExpensesFixtures,
-    makePaymentMethodsArray,
+    makeMaliciousCategory,
+    makeMaliciousPayment_method,
+    makePayment_methodsArray,
     makeUsersArray,
+    seedCategoriesTables,
+    seedPayment_methodsTables,
+    seedMaliciousCategory,
+    seedMaliciousPayment_method,
     seedUsers,
 };

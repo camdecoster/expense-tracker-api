@@ -5,7 +5,7 @@ const knex = require("knex");
 // Configuration
 const helpers = require("./test-helpers");
 
-describe.only("Categories Endpoints", function () {
+describe("Categories Endpoints", function () {
     let db;
 
     const { testUsers, testCategories } = helpers.makeExpensesFixtures();
@@ -26,139 +26,129 @@ describe.only("Categories Endpoints", function () {
     afterEach("cleanup", () => helpers.cleanTables(db));
 
     describe(`GET /api/categories`, () => {
-        context.only(`Given no categories`, () => {
+        context(`Given no categories`, () => {
+            beforeEach(() => helpers.seedUsers(db, testUsers));
             it(`responds with 200 and an empty list`, () => {
-                return supertest(app).get("/api/categories").expect(200, []);
+                return supertest(app)
+                    .get("/api/categories")
+                    .set("Authorization", helpers.makeAuthHeader(testUsers[0]))
+                    .expect(200, []);
             });
         });
 
-        context("Given there are things in the database", () => {
-            beforeEach("insert things", () =>
-                helpers.seedThingsTables(db, testUsers, testThings, testReviews)
+        context("Given there are categories in the database", () => {
+            beforeEach("insert categories", () =>
+                helpers.seedCategoriesTables(db, testUsers, testCategories)
             );
 
-            it("responds with 200 and all of the things", () => {
-                const expectedThings = testThings.map((thing) =>
-                    helpers.makeExpectedThing(testUsers, thing, testReviews)
+            it("responds with 200 and all of the categories", () => {
+                const filteredCategories = testCategories.filter(
+                    (category) => category.user_id === testUsers[0].id
+                );
+                // Omit user_id from expected categories
+                const expectedCategories = filteredCategories.map((category) =>
+                    helpers.makeExpectedCategory(category)
                 );
                 return supertest(app)
-                    .get("/api/things")
-                    .expect(200, expectedThings);
+                    .get("/api/categories")
+                    .set("Authorization", helpers.makeAuthHeader(testUsers[0]))
+                    .expect(200, expectedCategories);
             });
         });
 
-        // context.skip(`Given an XSS attack thing`, () => {
-        //     const testUser = helpers.makeUsersArray()[1];
-        //     const {
-        //         maliciousThing,
-        //         expectedThing,
-        //     } = helpers.makeMaliciousThing(testUser);
+        context(`Given an XSS attack category`, () => {
+            const testUser = helpers.makeUsersArray()[1];
+            const {
+                maliciousCategory,
+                expectedCategory,
+            } = helpers.makeMaliciousCategory(testUser);
 
-        //     beforeEach("insert malicious thing", () => {
-        //         return helpers.seedMaliciousThing(db, testUser, maliciousThing);
-        //     });
+            beforeEach("insert malicious category", () => {
+                return helpers.seedMaliciousCategory(
+                    db,
+                    testUser,
+                    maliciousCategory
+                );
+            });
 
-        //     it("removes XSS attack content", () => {
-        //         return supertest(app)
-        //             .get(`/api/things`)
-        //             .expect(200)
-        //             .expect((res) => {
-        //                 expect(res.body[0].title).to.eql(expectedThing.title);
-        //                 expect(res.body[0].content).to.eql(
-        //                     expectedThing.content
-        //                 );
-        //             });
-        //     });
-        // });
+            it("removes XSS attack content", () => {
+                return supertest(app)
+                    .get("/api/categories")
+                    .set("Authorization", helpers.makeAuthHeader(testUser))
+                    .expect(200)
+                    .expect((res) => {
+                        expect(res.body[0].category_name).to.eql(
+                            expectedCategory.category_name
+                        );
+                        expect(res.body[0].type).to.eql(expectedCategory.type);
+                        expect(res.body[0].description).to.eql(
+                            expectedCategory.description
+                        );
+                    });
+            });
+        });
     });
 
-    describe(`GET /api/things/:thing_id`, () => {
-        context(`Given no things`, () => {
+    describe(`GET /api/categories/:category_id`, () => {
+        context(`Given no categories`, () => {
             beforeEach(() => helpers.seedUsers(db, testUsers));
 
             it(`responds with 404`, () => {
-                const thingId = 123456;
+                const categoryId = 123456;
                 return supertest(app)
-                    .get(`/api/things/${thingId}`)
+                    .get(`/api/categories/${categoryId}`)
                     .set("Authorization", helpers.makeAuthHeader(testUsers[0]))
-                    .expect(404, { error: `Thing doesn't exist` });
+                    .expect(404, { error: `Category doesn't exist` });
             });
         });
 
-        context("Given there are things in the database", () => {
-            beforeEach("insert things", () =>
-                helpers.seedThingsTables(db, testUsers, testThings, testReviews)
+        context("Given there are categories in the database", () => {
+            beforeEach("insert categories", () =>
+                helpers.seedCategoriesTables(db, testUsers, testCategories)
             );
 
-            it("responds with 200 and the specified thing", () => {
-                const thingId = 2;
-                const expectedThing = helpers.makeExpectedThing(
-                    testUsers,
-                    testThings[thingId - 1],
-                    testReviews
+            it("responds with 200 and the specified category", () => {
+                const categoryId = 2;
+                const expectedCategory = helpers.makeExpectedCategory(
+                    testCategories[categoryId - 1]
                 );
 
                 return supertest(app)
-                    .get(`/api/things/${thingId}`)
+                    .get(`/api/categories/${categoryId}`)
                     .set("Authorization", helpers.makeAuthHeader(testUsers[0]))
-                    .expect(200, expectedThing);
+                    .expect(200, expectedCategory);
             });
         });
 
-        // context(`Given an XSS attack thing`, () => {
-        //     const testUser = helpers.makeUsersArray()[1];
-        //     const {
-        //         maliciousThing,
-        //         expectedThing,
-        //     } = helpers.makeMaliciousThing(testUser);
+        context(`Given an XSS attack category`, () => {
+            const testUser = helpers.makeUsersArray()[1];
+            const {
+                maliciousCategory,
+                expectedCategory,
+            } = helpers.makeMaliciousCategory(testUser);
 
-        //     beforeEach("insert malicious thing", () => {
-        //         return helpers.seedMaliciousThing(db, testUser, maliciousThing);
-        //     });
-
-        //     it("removes XSS attack content", () => {
-        //         return supertest(app)
-        //             .get(`/api/things/${maliciousThing.id}`)
-        //             .set("Authorization", helpers.makeAuthHeader(testUser))
-        //             .expect(200)
-        //             .expect((res) => {
-        //                 expect(res.body.title).to.eql(expectedThing.title);
-        //                 expect(res.body.content).to.eql(expectedThing.content);
-        //             });
-        //     });
-        // });
-    });
-
-    describe(`GET /api/things/:thing_id/reviews`, () => {
-        context(`Given no things`, () => {
-            beforeEach(() => helpers.seedUsers(db, testUsers));
-
-            it(`responds with 404`, () => {
-                const thingId = 123456;
-                return supertest(app)
-                    .get(`/api/things/${thingId}/reviews`)
-                    .set("Authorization", helpers.makeAuthHeader(testUsers[0]))
-                    .expect(404, { error: `Thing doesn't exist` });
-            });
-        });
-
-        context("Given there are reviews for thing in the database", () => {
-            beforeEach("insert things", () =>
-                helpers.seedThingsTables(db, testUsers, testThings, testReviews)
-            );
-
-            it("responds with 200 and the specified reviews", () => {
-                const thingId = 1;
-                const expectedReviews = helpers.makeExpectedThingReviews(
-                    testUsers,
-                    thingId,
-                    testReviews
+            beforeEach("insert malicious category", () => {
+                return helpers.seedMaliciousCategory(
+                    db,
+                    testUser,
+                    maliciousCategory
                 );
+            });
 
+            it("removes XSS attack content", () => {
                 return supertest(app)
-                    .get(`/api/things/${thingId}/reviews`)
-                    .set("Authorization", helpers.makeAuthHeader(testUsers[0]))
-                    .expect(200, expectedReviews);
+                    .get(`/api/categories/${maliciousCategory.id}`)
+                    .set("Authorization", helpers.makeAuthHeader(testUser))
+                    .expect(200)
+                    .expect((res) => {
+                        expect(res.body.category_name).to.eql(
+                            expectedCategory.category_name
+                        );
+                        expect(res.body.type).to.eql(expectedCategory.type);
+                        expect(res.body.description).to.eql(
+                            expectedCategory.description
+                        );
+                    });
             });
         });
     });

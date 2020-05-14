@@ -9,6 +9,7 @@ const ExpensesService = require("./expenses/expenses-service");
 const usersRouter = require("./users/users-router");
 const categoriesRouter = require("./categories/categories-router");
 const authRouter = require("./auth/auth-router");
+const paymentMethodsRouter = require("./payment_methods/payment_methods-router");
 
 // Configuration
 const { NODE_ENV } = require("./config");
@@ -28,6 +29,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/categories", categoriesRouter);
+app.use("/api/payment-methods", paymentMethodsRouter);
 
 app.use(function errorHandler(error, req, res, next) {
     let response;

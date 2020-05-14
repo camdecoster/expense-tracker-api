@@ -1,4 +1,8 @@
+// Modules
+const xss = require("xss");
+
 const CategoriesService = {
+    // Create new category
     createCategory(db, newCategory) {
         return db
             .from("categories")
@@ -9,16 +13,18 @@ const CategoriesService = {
             });
     },
 
+    // Delete category from database
     deleteCategory(db, id) {
         return db.from("categories").where({ id }).delete();
     },
 
+    // Get all categories owned by user
     getAllCategories(db, user) {
         return db
             .from("categories AS category")
             .select(
                 "category.id",
-                "category.category_name AS name",
+                "category.category_name",
                 "category.type",
                 "category.amount",
                 "category.description",
@@ -30,23 +36,33 @@ const CategoriesService = {
         // .groupBy("ctg.id", "user.id");
     },
 
+    // Get category with given ID
     getById(db, user, id) {
         return CategoriesService.getAllCategories(db, user)
             .where("category.id", id)
             .first();
     },
 
+    // Remove any XSS attack scripts from multiple categories
+    sanitizeCategories(categories) {
+        return categories.map(this.sanitizeCategory);
+    },
+
+    // Remove any XSS attack scripts from single category
+    sanitizeCategory(category) {
+        return {
+            ...category,
+            category_name: xss(category.category_name),
+            type: xss(category.type),
+            amount: xss(category.amount),
+            description: xss(category.description),
+        };
+    },
+
+    // Update category with new info
     updateCategory(db, id, categoryToUpdate) {
         return db.from("categories").where({ id }).update(categoryToUpdate);
     },
 };
-
-// Use to get user data from SQL query, key:value format used for treeize
-// const userFields = [
-//     "user.id AS user:id",
-//     "user.email AS user:email",
-//     "user.date_created AS user:date_created",
-//     "user.date_modified AS user:date_modified",
-// ];
 
 module.exports = CategoriesService;

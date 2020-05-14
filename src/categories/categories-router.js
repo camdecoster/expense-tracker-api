@@ -1,23 +1,12 @@
 // Modules
 const express = require("express");
 const path = require("path");
-const xss = require("xss");
 const { requireAuth } = require("../middleware/jwt-auth");
 const CategoriesService = require("./categories-service");
 
 // Configuration
 const categoriesRouter = express.Router();
 const jsonBodyParser = express.json();
-
-// Clean out malicious scripts from category
-function sanitizeCategory(category) {
-    return {
-        category_name: xss(category.category_name),
-        type: xss(category.type),
-        amount: xss(category.amount),
-        description: xss(category.description),
-    };
-}
 
 // Handle GET, POST on / endpoint
 categoriesRouter
@@ -30,7 +19,7 @@ categoriesRouter
 
         CategoriesService.getAllCategories(req.app.get("db"), user)
             .then((categories) => {
-                res.json(categories);
+                res.json(CategoriesService.sanitizeCategories(categories));
             })
             .catch(next);
     })
@@ -40,9 +29,9 @@ categoriesRouter
         const { user } = req;
 
         // Get category info from request, create new category object
-        const { name, type, amount, description } = req.body;
-        const newCategory = sanitizeCategory({
-            category_name: name,
+        const { category_name, type, amount, description } = req.body;
+        const newCategory = CategoriesService.sanitizeCategory({
+            category_name,
             type,
             amount,
             description,
@@ -67,7 +56,7 @@ categoriesRouter
                     .location(
                         path.posix.join(req.originalUrl, `/${category.id}`)
                     )
-                    .json(category);
+                    .json(CategoriesService.sanitizeCategory(category));
             })
             .catch(next);
     });
@@ -79,16 +68,14 @@ categoriesRouter
     .all(checkCategoryExists)
     // Return category info
     .get((req, res, next) => {
-        res.json(res.category);
+        res.json(CategoriesService.sanitizeCategory(res.category));
     })
     // Update category info
     .patch(jsonBodyParser, (req, res, next) => {
-        console.log("Trying to PATCH category");
-
         // Get updated info from request, create updated category object
-        const { name, type, amount, description } = req.body;
-        const categoryToUpdate = sanitizeCategory({
-            category_name: name,
+        const { category_name, type, amount, description } = req.body;
+        const categoryToUpdate = CategoriesService.sanitizeCategory({
+            category_name,
             type,
             amount,
             description,
@@ -98,9 +85,7 @@ categoriesRouter
         for (const [key, value] of Object.entries(categoryToUpdate)) {
             if (value == null)
                 return res.status(400).json({
-                    error: {
-                        message: `Request body must contain 'name', 'type', amount, and 'description'`,
-                    },
+                    error: { message: `Missing '${key}' in request body` },
                 });
         }
 
