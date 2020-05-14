@@ -1,7 +1,8 @@
+// Modules
 const knex = require("knex");
 const app = require("./app");
 
-const { PORT, DB_URL } = require("./config");
+const { DB_URL, NODE_ENV, PORT } = require("./config");
 
 const db = knex({
     client: "pg",
@@ -12,5 +13,9 @@ const db = knex({
 app.set("db", db);
 
 app.listen(PORT, () => {
-    console.log(`Server listening at http://localhost:${PORT}`);
+    console.log(
+        NODE_ENV === "production"
+            ? ""
+            : `Server listening at http://localhost:${PORT}`
+    );
 });
