@@ -27,7 +27,7 @@ describe("Categories Endpoints", function () {
 
     describe(`GET /api/categories`, () => {
         context(`Given no categories`, () => {
-            beforeEach(() => helpers.seedUsers(db, testUsers));
+            beforeEach(() => helpers.seedTables.users(db, testUsers));
             it(`responds with 200 and an empty list`, () => {
                 return supertest(app)
                     .get("/api/categories")
@@ -38,7 +38,7 @@ describe("Categories Endpoints", function () {
 
         context("Given there are categories in the database", () => {
             beforeEach("insert categories", () =>
-                helpers.seedCategoriesTables(db, testUsers, testCategories)
+                helpers.seedTables.categories(db, testUsers, testCategories)
             );
 
             it("responds with 200 and all of the categories", () => {
@@ -47,7 +47,7 @@ describe("Categories Endpoints", function () {
                 );
                 // Omit user_id from expected categories
                 const expectedCategories = filteredCategories.map((category) =>
-                    helpers.makeExpectedCategory(category)
+                    helpers.makeExpected.category(category)
                 );
                 return supertest(app)
                     .get("/api/categories")
@@ -57,14 +57,14 @@ describe("Categories Endpoints", function () {
         });
 
         context(`Given an XSS attack category`, () => {
-            const testUser = helpers.makeUsersArray()[1];
+            const testUser = testUsers[1];
             const {
                 maliciousCategory,
                 expectedCategory,
-            } = helpers.makeMaliciousCategory(testUser);
+            } = helpers.makeMalicious.category(testUser);
 
             beforeEach("insert malicious category", () => {
-                return helpers.seedMaliciousCategory(
+                return helpers.seedMalicious.category(
                     db,
                     testUser,
                     maliciousCategory
@@ -91,7 +91,7 @@ describe("Categories Endpoints", function () {
 
     describe(`GET /api/categories/:category_id`, () => {
         context(`Given no categories`, () => {
-            beforeEach(() => helpers.seedUsers(db, testUsers));
+            beforeEach(() => helpers.seedTables.users(db, testUsers));
 
             it(`responds with 404`, () => {
                 const categoryId = 123456;
@@ -104,12 +104,12 @@ describe("Categories Endpoints", function () {
 
         context("Given there are categories in the database", () => {
             beforeEach("insert categories", () =>
-                helpers.seedCategoriesTables(db, testUsers, testCategories)
+                helpers.seedTables.categories(db, testUsers, testCategories)
             );
 
             it("responds with 200 and the specified category", () => {
                 const categoryId = 2;
-                const expectedCategory = helpers.makeExpectedCategory(
+                const expectedCategory = helpers.makeExpected.category(
                     testCategories[categoryId - 1]
                 );
 
@@ -121,14 +121,14 @@ describe("Categories Endpoints", function () {
         });
 
         context(`Given an XSS attack category`, () => {
-            const testUser = helpers.makeUsersArray()[1];
+            const testUser = testUsers[1];
             const {
                 maliciousCategory,
                 expectedCategory,
-            } = helpers.makeMaliciousCategory(testUser);
+            } = helpers.makeMalicious.category(testUser);
 
             beforeEach("insert malicious category", () => {
-                return helpers.seedMaliciousCategory(
+                return helpers.seedMalicious.category(
                     db,
                     testUser,
                     maliciousCategory

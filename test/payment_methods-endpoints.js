@@ -27,7 +27,7 @@ describe("Payment Methods Endpoints", function () {
 
     describe(`GET /api/payment-methods`, () => {
         context(`Given no payment methods`, () => {
-            beforeEach(() => helpers.seedUsers(db, testUsers));
+            beforeEach(() => helpers.seedTables.users(db, testUsers));
             it(`responds with 200 and an empty list`, () => {
                 return supertest(app)
                     .get("/api/payment-methods")
@@ -38,7 +38,7 @@ describe("Payment Methods Endpoints", function () {
 
         context("Given there are payment methods in the database", () => {
             beforeEach("insert payment methods", () =>
-                helpers.seedPayment_methodsTables(
+                helpers.seedTables.payment_methods(
                     db,
                     testUsers,
                     testPayment_methods
@@ -53,7 +53,7 @@ describe("Payment Methods Endpoints", function () {
                 // Omit user_id from expected payment methods
                 const expectedPayment_methods = filteredPayment_methods.map(
                     (payment_method) =>
-                        helpers.makeExpectedPayment_method(payment_method)
+                        helpers.makeExpected.payment_method(payment_method)
                 );
                 return supertest(app)
                     .get("/api/payment-methods")
@@ -63,14 +63,14 @@ describe("Payment Methods Endpoints", function () {
         });
 
         context(`Given an XSS attack payment method`, () => {
-            const testUser = helpers.makeUsersArray()[1];
+            const testUser = testUsers[1];
             const {
                 maliciousPayment_method,
                 expectedPayment_method,
-            } = helpers.makeMaliciousPayment_method(testUser);
+            } = helpers.makeMalicious.payment_method(testUser);
 
             beforeEach("insert malicious payment method", () => {
-                return helpers.seedMaliciousPayment_method(
+                return helpers.seedMalicious.payment_method(
                     db,
                     testUser,
                     maliciousPayment_method
@@ -99,7 +99,7 @@ describe("Payment Methods Endpoints", function () {
 
     describe(`GET /api/payment-methods/:payment_method_id`, () => {
         context(`Given no payment methods`, () => {
-            beforeEach(() => helpers.seedUsers(db, testUsers));
+            beforeEach(() => helpers.seedTables.users(db, testUsers));
 
             it(`responds with 404`, () => {
                 const payment_methodId = 123456;
@@ -112,7 +112,7 @@ describe("Payment Methods Endpoints", function () {
 
         context("Given there are payment methods in the database", () => {
             beforeEach("insert payment methods", () =>
-                helpers.seedPayment_methodsTables(
+                helpers.seedTables.payment_methods(
                     db,
                     testUsers,
                     testPayment_methods
@@ -121,7 +121,7 @@ describe("Payment Methods Endpoints", function () {
 
             it("responds with 200 and the specified payment method", () => {
                 const payment_methodId = 2;
-                const expectedPayment_method = helpers.makeExpectedPayment_method(
+                const expectedPayment_method = helpers.makeExpected.payment_method(
                     testPayment_methods[payment_methodId - 1]
                 );
 
@@ -133,14 +133,14 @@ describe("Payment Methods Endpoints", function () {
         });
 
         context(`Given an XSS attack payment method`, () => {
-            const testUser = helpers.makeUsersArray()[1];
+            const testUser = testUsers[1];
             const {
                 maliciousPayment_method,
                 expectedPayment_method,
-            } = helpers.makeMaliciousPayment_method(testUser);
+            } = helpers.makeMalicious.payment_method(testUser);
 
             beforeEach("insert malicious payment method", () => {
-                return helpers.seedMaliciousPayment_method(
+                return helpers.seedMalicious.payment_method(
                     db,
                     testUser,
                     maliciousPayment_method

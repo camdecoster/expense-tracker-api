@@ -32,8 +32,6 @@ const CategoriesService = {
                 "category.date_modified"
             )
             .where("category.user_id", user.id);
-        // .leftJoin("users as user", "ctg.user_id", "user.id");
-        // .groupBy("ctg.id", "user.id");
     },
 
     // Get category with given ID
