@@ -64,8 +64,12 @@ expensesRouter
         ExpensesService.createExpense(req.app.get("db"), newExpense)
             .then((expense) => {
                 res.status(201)
+                    // Add location but remove '/api' from string
                     .location(
-                        path.posix.join(req.originalUrl, `/${expense.id}`)
+                        path.posix.join(
+                            req.originalUrl.slice(4),
+                            `/${expense.id}`
+                        )
                     )
                     .json(ExpensesService.sanitizeExpense(expense));
             })

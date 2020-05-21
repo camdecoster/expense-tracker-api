@@ -24,6 +24,7 @@ app.use(helmet());
 app.use(
     cors({
         origin: CLIENT_ORIGIN,
+        exposedHeaders: ["Location"],
     })
 );
 
@@ -40,13 +41,20 @@ app.use("/api/payment-methods", payment_methodsRouter);
 app.use("/api/expenses", expensesRouter);
 // RESTRICT ALLOWABLE VALUES FOR DROPDOWN MENUS?
 
+app.use((req, res, next) => {
+    return res.status(404).json({
+        error: { message: `Address ${req.url} can't be found.` },
+    });
+});
 app.use((error, req, res, next) => {
     let response;
     if (process.env.NODE_ENV === "production") {
-        response = { error: { message: "Server error" } };
+        response = { error: { message: "Internal server error" } };
     } else {
         console.error(error);
-        response = { message: error.message, error };
+        response = {
+            error: { message: "Internal server error", error },
+        };
     }
     res.status(500).json(response);
 });

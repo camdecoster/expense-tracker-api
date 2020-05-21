@@ -33,8 +33,6 @@ const Payment_methodsService = {
                 "pm.date_modified"
             )
             .where("pm.user_id", user.id);
-        // .leftJoin("users as user", "ctg.user_id", "user.id");
-        // .groupBy("ctg.id", "user.id");
     },
 
     // Get payment method with given ID
@@ -42,6 +40,14 @@ const Payment_methodsService = {
         return Payment_methodsService.getAllPayment_methods(db, user)
             .where("pm.id", id)
             .first();
+    },
+
+    // Check if payment method name already used
+    hasPayment_methodWithName(db, user, payment_method_name) {
+        return Payment_methodsService.getAllPayment_methods(db, user)
+            .where("pm.payment_method_name", payment_method_name)
+            .first();
+        // .then((category) => !!category);
     },
 
     // Remove any XSS attack scripts from multiple payment methods

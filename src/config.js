@@ -5,4 +5,5 @@ module.exports = {
         process.env.DATABASE_URL ||
         "postgresql://et_mod@localhost/expense-tracker",
     JWT_SECRET: process.env.JWT_SECRET || "marblerumfingertoast",
+    CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || "http://localhost:3000",
 };

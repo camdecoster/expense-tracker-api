@@ -17,6 +17,8 @@ categoriesRouter
         // Get user info from auth check
         const { user } = req;
 
+        // console.log(user);
+
         CategoriesService.getAllCategories(req.app.get("db"), user)
             .then((categories) => {
                 res.json(CategoriesService.sanitizeCategories(categories));
@@ -38,42 +40,68 @@ categoriesRouter
         });
 
         // Check to see if required category property is missing
-        for (const [key, value] of Object.entries(newCategory)) {
-            if (value == null)
+        const requiredFields = ["category_name", "type", "amount"];
+        for (const inputField of requiredFields)
+            if (!req.body[inputField])
                 return res.status(400).json({
-                    error: { message: `Missing '${key}' in request body` },
+                    error: {
+                        message: `Missing '${inputField}' in request body`,
+                    },
                 });
-        }
 
-        // Add user_id, date_created to category object
-        newCategory.user_id = user.id;
-        newCategory.date_created = new Date().toISOString();
+        // Check if category name already used
+        CategoriesService.hasCategoryWithName(
+            req.app.get("db"),
+            user,
+            category_name
+        ).then((existingCategory) => {
+            if (!!existingCategory)
+                return res.status(400).json({
+                    error: {
+                        message: `Category name '${category_name}' already used`,
+                    },
+                });
 
-        // Add category to database; return category path, info
-        CategoriesService.createCategory(req.app.get("db"), newCategory)
-            .then((category) => {
-                res.status(201)
-                    .location(
-                        path.posix.join(req.originalUrl, `/${category.id}`)
-                    )
-                    .json(CategoriesService.sanitizeCategory(category));
-            })
-            .catch(next);
+            // Add user_id, date_created to category object
+            newCategory.user_id = user.id;
+            newCategory.date_created = new Date().toISOString();
+
+            // CONSIDER CHECKING FOR LEADING SPACES ON INPUTS
+
+            // Add category to database; return category path, info
+            CategoriesService.createCategory(req.app.get("db"), newCategory)
+                .then((category) => {
+                    res.status(201)
+                        // Add location but remove '/api' from string
+                        .location(
+                            path.posix.join(
+                                req.originalUrl.slice(4),
+                                `/${category.id}`
+                            )
+                        )
+                        .json(CategoriesService.sanitizeCategory(category));
+                })
+                .catch(next);
+        });
     });
 
 // Handle GET, DELETE, PATCH on /:category_id endpoint
 categoriesRouter
     .route("/:category_id")
     .all(requireAuth)
-    .all(checkCategoryExists)
+    .all(checkCategoryIdExists)
     // Return category info
     .get((req, res, next) => {
         res.json(CategoriesService.sanitizeCategory(res.category));
     })
     // Update category info
     .patch(jsonBodyParser, (req, res, next) => {
+        // Get user info from auth check
+        const { user } = req;
+
         // Get updated info from request, create updated category object
-        const { category_name, type, amount, description } = req.body;
+        const { id, category_name, type, amount, description } = req.body;
+
         const categoryToUpdate = CategoriesService.sanitizeCategory({
             category_name,
             type,
@@ -89,19 +117,39 @@ categoriesRouter
                 });
         }
 
-        // Add date_modified field, update to now
-        categoryToUpdate.date_modified = new Date().toISOString();
-
-        // Perform category update
-        CategoriesService.updateCategory(
+        CategoriesService.hasCategoryWithName(
             req.app.get("db"),
-            req.params.category_id,
-            categoryToUpdate
-        )
-            .then((numRowsAffected) => {
-                res.status(204).end();
-            })
-            .catch(next);
+            user,
+            category_name
+        ).then((existingCategory) => {
+            // Check if there's an existing category with updated name that
+            // isn't the current category
+            if (!!existingCategory) {
+                if (existingCategory.id !== id) {
+                    return res.status(400).json({
+                        error: {
+                            message: `Category name '${category_name}' already used`,
+                        },
+                    });
+                }
+            }
+
+            // Add date_modified field, update to now
+            categoryToUpdate.date_modified = new Date().toISOString();
+
+            // CONSIDER CHECKING FOR LEADING SPACES ON INPUTS
+
+            // Perform category update
+            CategoriesService.updateCategory(
+                req.app.get("db"),
+                req.params.category_id,
+                categoryToUpdate
+            )
+                .then((numRowsAffected) => {
+                    res.status(204).end();
+                })
+                .catch(next);
+        });
     })
     // Delete category from database
     .delete((req, res, next) => {
@@ -116,7 +164,7 @@ categoriesRouter
     });
 
 /* async/await syntax for promises */
-async function checkCategoryExists(req, res, next) {
+async function checkCategoryIdExists(req, res, next) {
     try {
         const category = await CategoriesService.getById(
             req.app.get("db"),
@@ -126,7 +174,7 @@ async function checkCategoryExists(req, res, next) {
 
         if (!category)
             return res.status(404).json({
-                error: `Category doesn't exist`,
+                error: { message: `Category ID doesn't exist` },
             });
 
         res.category = category;

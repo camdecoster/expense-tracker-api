@@ -5,7 +5,7 @@ CREATE TABLE categories (
         NULL,
         category_name TEXT NOT NULL,
         type TEXT NOT NULL,
-        amount MONEY NOT NULL,
+        amount DECIMAL NOT NULL,
         description TEXT,
         date_created TIMESTAMPTZ NOT NULL DEFAULT now(),
         date_modified TIMESTAMPTZ

@@ -41,6 +41,14 @@ const CategoriesService = {
             .first();
     },
 
+    // Check if category name already used
+    hasCategoryWithName(db, user, category_name) {
+        return CategoriesService.getAllCategories(db, user)
+            .where("category.category_name", category_name)
+            .first();
+        // .then((category) => !!category);
+    },
+
     // Remove any XSS attack scripts from multiple categories
     sanitizeCategories(categories) {
         return categories.map(this.sanitizeCategory);

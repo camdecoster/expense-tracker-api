@@ -5,7 +5,7 @@ CREATE TABLE expenses (
         NULL,
         date TIMESTAMPTZ NOT NULL,
         type TEXT NOT NULL,
-        amount MONEY NOT NULL,
+        amount DECIMAL NOT NULL,
         payee TEXT NOT NULL,
         category INTEGER REFERENCES categories(id) ON DELETE
     SET
