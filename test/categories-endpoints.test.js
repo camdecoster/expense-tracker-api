@@ -100,7 +100,9 @@ describe("Categories Endpoints", function () {
                 return supertest(app)
                     .get(`/api/categories/${categoryId}`)
                     .set("Authorization", helpers.makeAuthHeader(testUsers[0]))
-                    .expect(404, { error: `Category doesn't exist` });
+                    .expect(404, {
+                        error: { message: `Category ID doesn't exist` },
+                    });
             });
         });
 
@@ -137,13 +139,13 @@ describe("Categories Endpoints", function () {
                 );
             });
 
-            it.only("removes XSS attack content", () => {
+            it("removes XSS attack content", () => {
                 return supertest(app)
                     .get(`/api/categories/${maliciousCategory.id}`)
                     .set("Authorization", helpers.makeAuthHeader(testUser))
                     .expect(200)
                     .expect((res) => {
-                        console.log(res);
+                        // console.log(res);
                         expect(res.body.category_name).to.eql(
                             expectedCategory.category_name
                         );
@@ -156,7 +158,7 @@ describe("Categories Endpoints", function () {
         });
     });
 
-    describe.only(`POST /api/categories`, () => {
+    describe(`POST /api/categories`, () => {
         context(`Category Validation`, () => {
             beforeEach("insert users and categories", () =>
                 helpers.seedTables.categories(db, testUsers, testCategories)
@@ -219,7 +221,7 @@ describe("Categories Endpoints", function () {
                 const newCategory = {
                     category_name: "New Category",
                     type: "monthly",
-                    amount: "$999.00",
+                    amount: "999.00",
                     description: "New description",
                 };
                 return supertest(app)
@@ -238,7 +240,7 @@ describe("Categories Endpoints", function () {
                             newCategory.description
                         );
                         expect(res.headers.location).to.eql(
-                            `/api/categories/${res.body.id}`
+                            `/categories/${res.body.id}`
                         );
                         const expectedDate = new Date().toLocaleString("en", {
                             timeZone: "UTC",
