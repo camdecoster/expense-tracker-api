@@ -1,26 +1,29 @@
-# Express Boilerplate!
+# [Expense Tracker API](https://expense-tracker-cdd.herokuapp.com/)
 
-This is a boilerplate project used for starting new projects!
+![Expense Tracker Dashboard](src/images/dashboard_categories.png)
 
-## Set up
+This is the repo for the backend of [Expense Tracker](https://expense-tracker-client.now.sh/). Expense Tracker is an easy to use budgeting app that helps one keep track of their expenses and see trends over time. The frontend communicates to the backend using the API:
 
-Complete the following steps to start a new project (NEW-PROJECT-NAME):
+-   **/api/auth**
 
-1. Clone this repository to your local machine `git clone BOILERPLATE-URL NEW-PROJECTS-NAME`
-2. `cd` into the cloned repository
-3. Make a fresh start of the git history for this project with `rm -rf .git && git init`
-4. Install the node dependencies `npm install`
-5. Move the example Environment file to `.env` that will be ignored by git and read by the express server `mv example.env .env`
-6. Edit the contents of the `package.json` to use NEW-PROJECT-NAME instead of `"name": "express-boilerplate",`
+    The auth endpoint is used to authenticate users during login. It accepts a POST request with a username and password.
 
-## Scripts
+-   **/api/categories, /api/categories/{id}**
 
-Start the application `npm start`
+    The categories endpoint is used to get information about the budget categories set up by the user. It accepts GET and POST requests to the endpoint and will accept GET, UPDATE, and DELETE requests to the specific id.
 
-Start nodemon for the application `npm run dev`
+-   **/api/payment-methods, /api/payment-methods/{id}**
 
-Run the tests `npm test`
+    The payment methods endpoint is used to get information about the payment methods set up by the user. It accepts GET and POST requests to the endpoint and will accept GET, UPDATE, and DELETE requests to the specific id.
 
-## Deploying
+-   **/api/expenses**
 
-When your new project is ready for deployment, add a new Heroku application with `heroku create`. This will make a new git remote called "heroku" and you can then `npm run deploy` which will push to this remote's master branch.
+    The expenses endpoint is used to get information about the expenses entered by the user. It accepts GET and POST requests to the endpoint and will accept GET, UPDATE, and DELETE requests to the specific id.
+
+-   **/api/users**
+
+    The users endpoint is used to register new users. It accepts a POST request with a username and password.
+
+The API is located [here](https://expense-tracker-cdd.herokuapp.com/).
+
+[Expense Tracker](https://expense-tracker-client.now.sh/) is built using Node/Express/PostgreSQL for the backend and React for the [frontend](https://github.com/camdecoster/expense-tracker-client). Give it a try and let me know if you have any [feedback or suggestions](https://github.com/camdecoster/expense-tracker-api/issues) on the API.

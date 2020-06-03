@@ -43,8 +43,6 @@ expensesRouter
             type,
             amount,
             payee,
-            category,
-            payment_method,
             description,
         });
 
@@ -55,6 +53,10 @@ expensesRouter
                     error: { message: `Missing '${key}' in request body` },
                 });
         }
+
+        // Add category, payment method to expense object
+        newExpense.category = category;
+        newExpense.payment_method = payment_method;
 
         // Add user_id, date_created to expense object
         newExpense.user_id = user.id;
@@ -102,8 +104,6 @@ expensesRouter
             type,
             amount,
             payee,
-            category,
-            payment_method,
             description,
         });
 
@@ -114,6 +114,10 @@ expensesRouter
                     error: { message: `Missing '${key}' in request body` },
                 });
         }
+
+        // Add category, payment method to expense object
+        expenseToUpdate.category = category;
+        expenseToUpdate.payment_method = payment_method;
 
         // Add date_modified field, update to now
         expenseToUpdate.date_modified = new Date().toISOString();
