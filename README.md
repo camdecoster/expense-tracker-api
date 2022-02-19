@@ -2,7 +2,7 @@
 
 ![Expense Tracker Dashboard](src/images/dashboard_categories.png)
 
-This is the repo for the backend of [Expense Tracker](https://expense-tracker-client.now.sh/). Expense Tracker is an easy to use budgeting app that helps one keep track of their expenses and see trends over time. The frontend communicates to the backend using the API:
+This is the repo for the backend of [Expense Tracker](https://expense-tracker-client.vercel.app/). Expense Tracker is an easy to use budgeting app that helps one keep track of their expenses and see trends over time. The frontend communicates to the backend using the API:
 
 -   **/api/auth**
 
@@ -26,4 +26,4 @@ This is the repo for the backend of [Expense Tracker](https://expense-tracker-cl
 
 The API is located [here](https://expense-tracker-cdd.herokuapp.com/).
 
-[Expense Tracker](https://expense-tracker-client.now.sh/) is built using Node/Express/PostgreSQL for the backend and React for the [frontend](https://github.com/camdecoster/expense-tracker-client). Give it a try and let me know if you have any [feedback or suggestions](https://github.com/camdecoster/expense-tracker-api/issues) on the API.
+[Expense Tracker](https://expense-tracker-client.vercel.app/) is built using Node/Express/PostgreSQL for the backend and React for the [frontend](https://github.com/camdecoster/expense-tracker-client). Give it a try and let me know if you have any [feedback or suggestions](https://github.com/camdecoster/expense-tracker-api/issues) on the API.

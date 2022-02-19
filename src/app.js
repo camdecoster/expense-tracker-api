@@ -30,7 +30,7 @@ app.use(
 
 app.get("/", (req, res) => {
     res.send(
-        "Welcome to the Expense Tracker API! Go to https://expense-tracker-client.now.sh/ to start using it."
+        "Welcome to the Expense Tracker API! Go to https://expense-tracker-client.vercel.app/ to start using it."
     );
 });
 
